@@ -140,7 +140,34 @@ func handleLogin(store *Store, secret []byte) http.HandlerFunc {
 			return
 		}
 
-		writeJSON(w, http.StatusOK, map[string]string{"token": token})
+		writeJSON(w, http.StatusOK, map[string]any{
+			"token":                token,
+			"must_change_password": store.IsDefaultPassword(),
+		})
+	}
+}
+
+func handleChangePassword(store *Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid request body")
+			return
+		}
+		if req.Username == "" || req.Password == "" {
+			writeError(w, http.StatusBadRequest, "username and password required")
+			return
+		}
+
+		if err := store.SetAdmin(req.Username, req.Password); err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to update password")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 	}
 }
 
@@ -283,6 +310,7 @@ func runAPI(cfg *Config, store *Store) {
 	mux.HandleFunc("POST /api/login", handleLogin(store, secret))
 
 	// Protected
+	mux.HandleFunc("POST /api/admin/password", authMiddleware(handleChangePassword(store), secret))
 	mux.HandleFunc("GET /api/stats", authMiddleware(handleGetStats(store), secret))
 	mux.HandleFunc("GET /api/users", authMiddleware(handleListUsers(store), secret))
 	mux.HandleFunc("POST /api/users", authMiddleware(handleCreateUser(store), secret))

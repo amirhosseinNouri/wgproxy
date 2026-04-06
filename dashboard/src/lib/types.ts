@@ -16,4 +16,5 @@ export interface Stats {
 
 export interface LoginResponse {
   token: string;
+  must_change_password: boolean;
 }

@@ -25,8 +25,12 @@ export function LoginForm() {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(username, password);
-      router.push("/dashboard");
+      const data = await login(username, password);
+      if (data.must_change_password) {
+        router.push("/change-password");
+      } else {
+        router.push("/dashboard");
+      }
     } catch {
       toast.error("Invalid credentials");
     } finally {

@@ -47,9 +47,10 @@ func NewStore(dbPath string) (*Store, error) {
 func migrate(db *sql.DB) error {
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS admin (
-			id       INTEGER PRIMARY KEY CHECK (id = 1),
-			username TEXT NOT NULL,
-			password TEXT NOT NULL
+			id               INTEGER PRIMARY KEY CHECK (id = 1),
+			username         TEXT NOT NULL,
+			password         TEXT NOT NULL,
+			password_changed INTEGER NOT NULL DEFAULT 0
 		);
 
 		CREATE TABLE IF NOT EXISTS users (
@@ -60,6 +61,15 @@ func migrate(db *sql.DB) error {
 			enabled    INTEGER NOT NULL DEFAULT 1,
 			created_at DATETIME NOT NULL DEFAULT (datetime('now'))
 		);
+	`)
+	if err != nil {
+		return err
+	}
+
+	// Seed default admin credentials (admin/admin) if not set
+	_, err = db.Exec(`
+		INSERT OR IGNORE INTO admin (id, username, password, password_changed)
+		VALUES (1, 'admin', 'admin', 0)
 	`)
 	return err
 }
@@ -72,8 +82,8 @@ func (s *Store) Close() error {
 
 func (s *Store) SetAdmin(username, password string) error {
 	_, err := s.db.Exec(`
-		INSERT INTO admin (id, username, password) VALUES (1, ?, ?)
-		ON CONFLICT(id) DO UPDATE SET username=excluded.username, password=excluded.password
+		INSERT INTO admin (id, username, password, password_changed) VALUES (1, ?, ?, 1)
+		ON CONFLICT(id) DO UPDATE SET username=excluded.username, password=excluded.password, password_changed=1
 	`, username, password)
 	return err
 }
@@ -81,9 +91,16 @@ func (s *Store) SetAdmin(username, password string) error {
 func (s *Store) GetAdmin() (username, password string, err error) {
 	err = s.db.QueryRow("SELECT username, password FROM admin WHERE id=1").Scan(&username, &password)
 	if err == sql.ErrNoRows {
-		return "", "", fmt.Errorf("admin not configured, run: wg0proxy admin set <username> <password>")
+		return "", "", fmt.Errorf("admin not configured")
 	}
 	return
+}
+
+// IsDefaultPassword returns true if the admin has not changed the default password.
+func (s *Store) IsDefaultPassword() bool {
+	var changed int
+	err := s.db.QueryRow("SELECT password_changed FROM admin WHERE id=1").Scan(&changed)
+	return err != nil || changed == 0
 }
 
 // --- Users ---

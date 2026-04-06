@@ -42,13 +42,23 @@ async function request<T>(
 export async function login(
   username: string,
   password: string
-): Promise<string> {
+): Promise<LoginResponse> {
   const data = await request<LoginResponse>("/api/login", {
     method: "POST",
     body: JSON.stringify({ username, password }),
   });
   localStorage.setItem("token", data.token);
-  return data.token;
+  return data;
+}
+
+export async function changeAdminPassword(
+  username: string,
+  password: string
+): Promise<void> {
+  await request("/api/admin/password", {
+    method: "POST",
+    body: JSON.stringify({ username, password }),
+  });
 }
 
 export async function getStats(): Promise<Stats> {
