@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { updateUser } from "@/lib/api";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import type { User } from "@/lib/types";
 
 interface EditUserDialogProps {
@@ -57,14 +58,19 @@ export function EditUserDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit User: {user.username}</DialogTitle>
+          <DialogTitle>
+            Edit User:{" "}
+            <span className="font-mono text-primary">{user.username}</span>
+          </DialogTitle>
           <DialogDescription>
             Update user settings. Leave password blank to keep current.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="edit-password">New Password</Label>
+            <Label htmlFor="edit-password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              New Password
+            </Label>
             <Input
               id="edit-password"
               type="password"
@@ -73,8 +79,10 @@ export function EditUserDialog({
               placeholder="Leave blank to keep current"
             />
           </div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="edit-enabled">Enabled</Label>
+          <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 px-4 py-3">
+            <Label htmlFor="edit-enabled" className="text-sm">
+              Enabled
+            </Label>
             <Switch
               id="edit-enabled"
               checked={enabled}
@@ -82,7 +90,14 @@ export function EditUserDialog({
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Saving..." : "Save Changes"}
+            {loading ? (
+              <>
+                <Loader2 className="size-3.5 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
           </Button>
         </form>
       </DialogContent>

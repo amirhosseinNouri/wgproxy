@@ -15,7 +15,7 @@ export default function LoginPage() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center grid-bg auth-glow px-4">
       <LoginForm />
     </div>
   );

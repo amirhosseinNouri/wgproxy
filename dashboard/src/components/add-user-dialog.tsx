@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createUser } from "@/lib/api";
 import { toast } from "sonner";
+import { Loader2, Plus } from "lucide-react";
 
 interface AddUserDialogProps {
   onSuccess: () => void;
@@ -44,7 +45,8 @@ export function AddUserDialog({ onSuccess }: AddUserDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button />}>
+      <DialogTrigger render={<Button size="sm" className="gap-1.5" />}>
+        <Plus className="size-3.5" />
         Add User
       </DialogTrigger>
       <DialogContent>
@@ -56,7 +58,9 @@ export function AddUserDialog({ onSuccess }: AddUserDialogProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="new-username">Username</Label>
+            <Label htmlFor="new-username" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Username
+            </Label>
             <Input
               id="new-username"
               value={username}
@@ -66,7 +70,9 @@ export function AddUserDialog({ onSuccess }: AddUserDialogProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="new-password">Password</Label>
+            <Label htmlFor="new-password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Password
+            </Label>
             <Input
               id="new-password"
               type="password"
@@ -76,7 +82,14 @@ export function AddUserDialog({ onSuccess }: AddUserDialogProps) {
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Creating..." : "Create User"}
+            {loading ? (
+              <>
+                <Loader2 className="size-3.5 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              "Create User"
+            )}
           </Button>
         </form>
       </DialogContent>

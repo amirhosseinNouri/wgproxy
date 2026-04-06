@@ -1,7 +1,14 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useStats } from "@/hooks/use-stats";
+import {
+  ArrowUpFromLine,
+  ArrowDownToLine,
+  Users,
+  Activity,
+  Clock,
+} from "lucide-react";
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -24,39 +31,59 @@ export function StatsCards() {
 
   const cards = [
     {
-      title: "Total Upload",
+      title: "Upload",
       value: data ? formatBytes(data.total_upload) : "-",
+      icon: ArrowUpFromLine,
+      accent: "text-teal",
     },
     {
-      title: "Total Download",
+      title: "Download",
       value: data ? formatBytes(data.total_download) : "-",
+      icon: ArrowDownToLine,
+      accent: "text-teal",
     },
     {
       title: "Total Users",
       value: data ? String(data.user_count) : "-",
+      icon: Users,
+      accent: "text-teal",
     },
     {
-      title: "Active Users",
+      title: "Active",
       value: data ? String(data.active_users) : "-",
+      icon: Activity,
+      accent: "text-teal",
     },
     {
       title: "Uptime",
       value: data ? formatUptime(data.uptime_seconds) : "-",
+      icon: Clock,
+      accent: "text-teal",
     },
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-      {cards.map((card) => (
-        <Card key={card.title}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {card.title}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? "..." : card.value}
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      {cards.map((card, i) => (
+        <Card
+          key={card.title}
+          className={`stat-card animate-fade-in-up stagger-${i + 1} border-border/50`}
+        >
+          <CardContent className="flex items-start justify-between pt-1">
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                {card.title}
+              </p>
+              <p className="font-mono text-2xl font-bold tracking-tight">
+                {isLoading ? (
+                  <span className="inline-block h-7 w-16 animate-pulse rounded bg-muted" />
+                ) : (
+                  card.value
+                )}
+              </p>
+            </div>
+            <div className={`rounded-lg bg-primary/10 p-2 ${card.accent}`}>
+              <card.icon className="size-4" />
             </div>
           </CardContent>
         </Card>
