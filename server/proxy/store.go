@@ -66,12 +66,21 @@ func migrate(db *sql.DB) error {
 		return err
 	}
 
-	// Seed default admin credentials (admin/admin) if not set
-	_, err = db.Exec(`
-		INSERT OR IGNORE INTO admin (id, username, password, password_changed)
-		VALUES (1, 'admin', 'admin', 0)
-	`)
-	return err
+	// Add password_changed column if missing (upgrade from older schema)
+	db.Exec("ALTER TABLE admin ADD COLUMN password_changed INTEGER NOT NULL DEFAULT 0")
+
+	// Seed default admin credentials (admin/admin) if no admin row exists
+	var count int
+	if err := db.QueryRow("SELECT COUNT(*) FROM admin").Scan(&count); err != nil {
+		return err
+	}
+	if count == 0 {
+		_, err = db.Exec(
+			"INSERT INTO admin (id, username, password, password_changed) VALUES (1, 'admin', 'admin', 0)",
+		)
+		return err
+	}
+	return nil
 }
 
 func (s *Store) Close() error {
