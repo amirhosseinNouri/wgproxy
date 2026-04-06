@@ -17,6 +17,8 @@ services:
     build: ./dashboard
     ports:
       - "3000:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       - API_URL=http://host.docker.internal:8080
     depends_on:
