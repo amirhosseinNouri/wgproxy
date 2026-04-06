@@ -1,9 +1,9 @@
 services:
   api:
     build: ./server
-    ports:
-      - "1081:1081"
-      - "8080:8080"
+    network_mode: host
+    cap_add:
+      - NET_RAW
     environment:
       - API_PORT=8080
       - PROXY_PORT=1081
@@ -18,7 +18,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - API_URL=http://api:8080
+      - API_URL=http://host.docker.internal:8080
     depends_on:
       - api
     restart: unless-stopped
