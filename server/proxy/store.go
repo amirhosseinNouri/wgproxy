@@ -69,18 +69,17 @@ func migrate(db *sql.DB) error {
 	// Add password_changed column if missing (upgrade from older schema)
 	db.Exec("ALTER TABLE admin ADD COLUMN password_changed INTEGER NOT NULL DEFAULT 0")
 
-	// Seed default admin credentials (admin/admin) if no admin row exists
-	var count int
-	if err := db.QueryRow("SELECT COUNT(*) FROM admin").Scan(&count); err != nil {
-		return err
-	}
-	if count == 0 {
-		_, err = db.Exec(
-			"INSERT INTO admin (id, username, password, password_changed) VALUES (1, 'admin', 'admin', 0)",
-		)
-		return err
-	}
-	return nil
+	// Ensure a default admin row exists.
+	// If no row exists, insert default admin/admin.
+	// If a row exists from before the password_changed feature (column was just added
+	// with default 0), reset it to admin/admin so the first-login flow works.
+	_, err = db.Exec(`
+		INSERT INTO admin (id, username, password, password_changed) VALUES (1, 'admin', 'admin', 0)
+		ON CONFLICT(id) DO UPDATE SET
+			username = CASE WHEN admin.password_changed = 0 THEN 'admin' ELSE admin.username END,
+			password = CASE WHEN admin.password_changed = 0 THEN 'admin' ELSE admin.password END
+	`)
+	return err
 }
 
 func (s *Store) Close() error {
