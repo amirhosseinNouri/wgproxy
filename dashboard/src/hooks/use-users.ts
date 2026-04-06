@@ -3,7 +3,7 @@ import { getUsers } from "@/lib/api";
 
 export function useUsers() {
   return useSWR("users", getUsers, {
-    refreshInterval: 30000,
+    refreshInterval: 15000,
     revalidateOnFocus: true,
   });
 }
