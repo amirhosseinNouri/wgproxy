@@ -1,0 +1,3 @@
+wg.front-uptime.top {
+	reverse_proxy dashboard:3000
+}
