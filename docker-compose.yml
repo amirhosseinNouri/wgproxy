@@ -14,7 +14,11 @@ services:
     restart: unless-stopped
 
   dashboard:
-    build: ./dashboard
+    build:
+      context: ./dashboard
+      args:
+        - NEXT_PUBLIC_SOCKS_HOST=${SOCKS_HOST:-72.62.0.219}
+        - NEXT_PUBLIC_SOCKS_PORT=${SOCKS_PORT:-1081}
     expose:
       - "3000"
     extra_hosts:

@@ -10,6 +10,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+ARG NEXT_PUBLIC_SOCKS_HOST=72.62.0.219
+ARG NEXT_PUBLIC_SOCKS_PORT=1081
+
 RUN npm run build
 
 FROM base AS runner
