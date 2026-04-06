@@ -283,6 +283,9 @@ func FormatBytes(b int64) string {
 }
 
 func RunServe(cfg *Config, store *Store) {
+	// Start API server first so admin can manage users via dashboard
+	go runAPI(cfg, store)
+
 	if cfg.IranOnly {
 		loadIranCIDRs(cfg.CIDRFile)
 	}
@@ -291,8 +294,12 @@ func RunServe(cfg *Config, store *Store) {
 	directDialer = &net.Dialer{Timeout: 10 * time.Second}
 
 	if !store.HasUsers() {
-		slog.Error("no users configured, add users first: wg0proxy user add <username> <password>")
-		os.Exit(1)
+		slog.Warn("no proxy users configured — SOCKS5 will start once users are added via dashboard or CLI")
+		// Wait for users to be added
+		for !store.HasUsers() {
+			time.Sleep(2 * time.Second)
+		}
+		slog.Info("users detected, starting SOCKS5 proxy")
 	}
 
 	mode := "all traffic via wg0"
@@ -307,9 +314,6 @@ func RunServe(cfg *Config, store *Store) {
 	}
 
 	slog.Info("SOCKS5 proxy started", "port", cfg.ListenPort, "mode", mode)
-
-	// Start API server
-	go runAPI(cfg, store)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
