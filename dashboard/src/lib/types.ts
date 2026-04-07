@@ -4,6 +4,8 @@ export interface User {
   download: number;
   enabled: boolean;
   created_at: string;
+  online: boolean;
+  connections: number;
 }
 
 export interface Stats {
@@ -11,6 +13,7 @@ export interface Stats {
   total_download: number;
   user_count: number;
   active_users: number;
+  online_users: number;
   uptime_seconds: number;
 }
 

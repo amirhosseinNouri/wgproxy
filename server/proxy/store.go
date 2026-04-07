@@ -25,6 +25,9 @@ type Store struct {
 	mu sync.Mutex // protects in-memory traffic deltas between flushes
 	// Accumulated traffic deltas since last flush, keyed by username.
 	traffic map[string][2]int64 // [0]=upload, [1]=download
+
+	connMu sync.Mutex // protects online connection counts
+	conns  map[string]int // active SOCKS5 connections per username
 }
 
 func NewStore(dbPath string) (*Store, error) {
@@ -41,6 +44,7 @@ func NewStore(dbPath string) (*Store, error) {
 	return &Store{
 		db:      db,
 		traffic: make(map[string][2]int64),
+		conns:   make(map[string]int),
 	}, nil
 }
 
@@ -215,6 +219,34 @@ func (s *Store) UpdateUser(username string, password *string, enabled *bool) err
 		}
 	}
 	return nil
+}
+
+// ConnectUser increments the active connection count for a user.
+func (s *Store) ConnectUser(username string) {
+	s.connMu.Lock()
+	s.conns[username]++
+	s.connMu.Unlock()
+}
+
+// DisconnectUser decrements the active connection count for a user.
+func (s *Store) DisconnectUser(username string) {
+	s.connMu.Lock()
+	s.conns[username]--
+	if s.conns[username] <= 0 {
+		delete(s.conns, username)
+	}
+	s.connMu.Unlock()
+}
+
+// OnlineUsers returns a map of usernames to their active connection counts.
+func (s *Store) OnlineUsers() map[string]int {
+	s.connMu.Lock()
+	defer s.connMu.Unlock()
+	result := make(map[string]int, len(s.conns))
+	for k, v := range s.conns {
+		result[k] = v
+	}
+	return result
 }
 
 // AddTraffic accumulates traffic in memory. Call Flush to persist.

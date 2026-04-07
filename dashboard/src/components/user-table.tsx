@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EditUserDialog } from "@/components/edit-user-dialog";
 import { DeleteUserDialog } from "@/components/delete-user-dialog";
-import { MoreHorizontal, Pencil, Trash2, UserX } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, UserX, Wifi, WifiOff } from "lucide-react";
 import type { User } from "@/lib/types";
 
 function formatBytes(bytes: number): string {
@@ -85,17 +85,24 @@ export function UserTable({ users, onRefresh }: UserTableProps) {
                 >
                   <TableCell className="font-medium">{user.username}</TableCell>
                   <TableCell>
-                    {user.enabled ? (
+                    {!user.enabled ? (
+                      <Badge variant="secondary" className="text-muted-foreground">
+                        Disabled
+                      </Badge>
+                    ) : user.online ? (
                       <Badge
                         variant="outline"
                         className="border-teal/30 bg-teal/10 text-teal"
                       >
                         <span className="mr-1 inline-block size-1.5 rounded-full bg-teal animate-pulse" />
-                        Active
+                        Online{user.connections > 1 ? ` (${user.connections})` : ""}
                       </Badge>
                     ) : (
-                      <Badge variant="secondary" className="text-muted-foreground">
-                        Disabled
+                      <Badge
+                        variant="outline"
+                        className="border-border/50 text-muted-foreground"
+                      >
+                        Offline
                       </Badge>
                     )}
                   </TableCell>

@@ -194,6 +194,7 @@ func handleGetStats(store *Store) http.HandlerFunc {
 			"total_download": totalDownload,
 			"user_count":     len(users),
 			"active_users":   activeUsers,
+			"online_users":   len(store.OnlineUsers()),
 			"uptime_seconds": int(time.Since(startTime).Seconds()),
 		})
 	}
@@ -207,22 +208,29 @@ func handleListUsers(store *Store) http.HandlerFunc {
 			return
 		}
 
+		online := store.OnlineUsers()
+
 		type userResp struct {
-			Username  string `json:"username"`
-			Upload    int64  `json:"upload"`
-			Download  int64  `json:"download"`
-			Enabled   bool   `json:"enabled"`
-			CreatedAt string `json:"created_at"`
+			Username    string `json:"username"`
+			Upload      int64  `json:"upload"`
+			Download    int64  `json:"download"`
+			Enabled     bool   `json:"enabled"`
+			CreatedAt   string `json:"created_at"`
+			Online      bool   `json:"online"`
+			Connections int    `json:"connections"`
 		}
 
 		resp := make([]userResp, 0, len(users))
 		for _, u := range users {
+			conns := online[u.Username]
 			resp = append(resp, userResp{
-				Username:  u.Username,
-				Upload:    u.Upload,
-				Download:  u.Download,
-				Enabled:   u.Enabled,
-				CreatedAt: u.CreatedAt.Format(time.RFC3339),
+				Username:    u.Username,
+				Upload:      u.Upload,
+				Download:    u.Download,
+				Enabled:     u.Enabled,
+				CreatedAt:   u.CreatedAt.Format(time.RFC3339),
+				Online:      conns > 0,
+				Connections: conns,
 			})
 		}
 

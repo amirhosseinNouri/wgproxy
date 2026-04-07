@@ -8,6 +8,7 @@ import {
   Users,
   Activity,
   Clock,
+  Wifi,
 } from "lucide-react";
 
 function formatBytes(bytes: number): string {
@@ -55,6 +56,12 @@ export function StatsCards() {
       accent: "text-teal",
     },
     {
+      title: "Online",
+      value: data ? String(data.online_users) : "-",
+      icon: Wifi,
+      accent: "text-teal",
+    },
+    {
       title: "Uptime",
       value: data ? formatUptime(data.uptime_seconds) : "-",
       icon: Clock,
@@ -63,7 +70,7 @@ export function StatsCards() {
   ];
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       {cards.map((card, i) => (
         <Card
           key={card.title}

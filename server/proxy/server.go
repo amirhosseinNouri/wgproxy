@@ -159,6 +159,9 @@ func handleConn(conn net.Conn, cfg *Config, store *Store) {
 	}
 	conn.Write([]byte{0x01, 0x00})
 
+	store.ConnectUser(username)
+	defer store.DisconnectUser(username)
+
 	// Phase 3: Connect request
 	reqHeader, err := readExact(conn, 4)
 	if err != nil || reqHeader[0] != 0x05 || reqHeader[1] != 0x01 {
