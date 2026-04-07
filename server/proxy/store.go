@@ -26,8 +26,8 @@ type Store struct {
 	// Accumulated traffic deltas since last flush, keyed by username.
 	traffic map[string][2]int64 // [0]=upload, [1]=download
 
-	connMu sync.Mutex // protects online connection counts
-	conns  map[string]int // active SOCKS5 connections per username
+	connMu sync.Mutex                // protects online connection tracking
+	conns  map[string]map[string]int // username -> sourceIP -> connection count
 }
 
 func NewStore(dbPath string) (*Store, error) {
@@ -44,7 +44,7 @@ func NewStore(dbPath string) (*Store, error) {
 	return &Store{
 		db:      db,
 		traffic: make(map[string][2]int64),
-		conns:   make(map[string]int),
+		conns:   make(map[string]map[string]int),
 	}, nil
 }
 
@@ -221,30 +221,36 @@ func (s *Store) UpdateUser(username string, password *string, enabled *bool) err
 	return nil
 }
 
-// ConnectUser increments the active connection count for a user.
-func (s *Store) ConnectUser(username string) {
+// ConnectUser tracks a new connection from sourceIP for the given user.
+func (s *Store) ConnectUser(username, sourceIP string) {
 	s.connMu.Lock()
-	s.conns[username]++
+	if s.conns[username] == nil {
+		s.conns[username] = make(map[string]int)
+	}
+	s.conns[username][sourceIP]++
 	s.connMu.Unlock()
 }
 
-// DisconnectUser decrements the active connection count for a user.
-func (s *Store) DisconnectUser(username string) {
+// DisconnectUser removes a connection from sourceIP for the given user.
+func (s *Store) DisconnectUser(username, sourceIP string) {
 	s.connMu.Lock()
-	s.conns[username]--
-	if s.conns[username] <= 0 {
+	s.conns[username][sourceIP]--
+	if s.conns[username][sourceIP] <= 0 {
+		delete(s.conns[username], sourceIP)
+	}
+	if len(s.conns[username]) == 0 {
 		delete(s.conns, username)
 	}
 	s.connMu.Unlock()
 }
 
-// OnlineUsers returns a map of usernames to their active connection counts.
+// OnlineUsers returns a map of usernames to their unique device (source IP) counts.
 func (s *Store) OnlineUsers() map[string]int {
 	s.connMu.Lock()
 	defer s.connMu.Unlock()
 	result := make(map[string]int, len(s.conns))
-	for k, v := range s.conns {
-		result[k] = v
+	for k, ips := range s.conns {
+		result[k] = len(ips)
 	}
 	return result
 }

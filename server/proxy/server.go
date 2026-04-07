@@ -159,8 +159,9 @@ func handleConn(conn net.Conn, cfg *Config, store *Store) {
 	}
 	conn.Write([]byte{0x01, 0x00})
 
-	store.ConnectUser(username)
-	defer store.DisconnectUser(username)
+	sourceIP, _, _ := net.SplitHostPort(clientIP)
+	store.ConnectUser(username, sourceIP)
+	defer store.DisconnectUser(username, sourceIP)
 
 	// Phase 3: Connect request
 	reqHeader, err := readExact(conn, 4)

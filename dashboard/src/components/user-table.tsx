@@ -95,7 +95,7 @@ export function UserTable({ users, onRefresh }: UserTableProps) {
                         className="border-teal/30 bg-teal/10 text-teal"
                       >
                         <span className="mr-1 inline-block size-1.5 rounded-full bg-teal animate-pulse" />
-                        Online{user.connections > 1 ? ` (${user.connections})` : ""}
+                        Online{user.connections > 1 ? ` (${user.connections} devices)` : ""}
                       </Badge>
                     ) : (
                       <Badge
